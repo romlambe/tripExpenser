@@ -5,6 +5,8 @@ import { colors } from '../theme'
 import BackButton from '../components/backButton'
 import { Image } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '../config/firebase'
 
 export default function SignInScreen() {
 	const [email,setEmail] = useState('');
@@ -12,12 +14,14 @@ export default function SignInScreen() {
 
 	const navigation = useNavigation();
 
-	const handleSubmit = () => {
+	const handleSubmit = async () => {
 		if (email && password){
-			navigation.goBack();
-			navigation.navigate('Home');
+			// navigation.goBack();
+			// navigation.navigate('Home');
+			await createUserWithEmailAndPassword(auth, email, password)
 		}else{
-
+			<Text>error</Text>
+			//trouver un moyen d'afficher une snackbar 
 		}
 	}
   return (

@@ -5,24 +5,37 @@ import { colors } from '../theme'
 import BackButton from '../components/backButton'
 import { Image } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword } from 'firebase/auth'
 import { auth } from '../config/firebase'
+import { Loading } from '../components/loading'
+import { useDispatch, useSelector } from 'react-redux'
+import { setUserLoading } from '../redux/slices/user'
 
 
 
 export default function SignInScreen() {
 	const [email,setEmail] = useState('');
 	const [password,setPassword] = useState('');
+	const {userLoading} =useSelector(state=>state.user);
 
 	const navigation = useNavigation();
+
+	const dispatch = useDispatch();
 
 	const handleSubmit = async () => {
 		if (email && password){
 			// navigation.goBack();
 			// navigation.navigate('Home');
-			await createUserWithEmailAndPassword(auth, email, password)
+			try{
+				dispatch(setUserLoading(true));
+				await signInWithEmailAndPassword(auth, email, password);
+				dispatch(setUserLoading(false));
+			}catch(e){
+				//snackbar aussi
+			}
+
 		}else{
-			// trouver un moyen d'afficher un message d'erreur (snackbar fonctionnel)
+			//pareil que sur signup rajouter une snackbar
 		}
 	}
   return (
@@ -51,9 +64,16 @@ export default function SignInScreen() {
 			</View>
 
 			<View>
-				<TouchableOpacity onPress={handleSubmit} style={{backgroundColor: colors.button}} className="my-6 rounded-full p-3 shadow-sm mx-2">
-					<Text className="text-center text-white text-lg font-bold">Sign In</Text>
-				</TouchableOpacity>
+				{
+					userLoading? (
+						<Loading />
+					):(
+						<TouchableOpacity onPress={handleSubmit} style={{backgroundColor: colors.button}} className="my-6 rounded-full p-3 shadow-sm mx-2">
+							<Text className="text-center text-white text-lg font-bold">Sign In</Text>
+						</TouchableOpacity>
+					)
+				}
+
 			</View>
 		</View>
 	</ScreenWrapper>
