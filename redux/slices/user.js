@@ -4,12 +4,11 @@ import { createSlice } from '@reduxjs/toolkit'
 // Define the initial state using that type
 const initialState = {
   user: null ,
-  userLoading: false,
+  userLoading: 'false',
 }
 
 export const userSlice = createSlice({
   name: 'user',
-  // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
 	setUser: (state, action) => {

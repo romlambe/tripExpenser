@@ -1,13 +1,16 @@
 import { View, Text, TouchableOpacity, Image, FlatList } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import ScreenWrapper from '../components/screenWrapper'
 import { colors } from '../theme'
 import randomImage from '../assets/images/randomImage'
 import EmptyList from '../components/emptyList'
-import { useNavigation } from '@react-navigation/native'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
 import BackButton from '../components/backButton'
 import ExpenseCard from '../components/expenseCard'
 import { ChevronLeftIcon } from 'react-native-heroicons/outline'
+// import { query } from 'firebase/database'
+import { getDocs, where, query } from 'firebase/firestore'
+import { expensesRef } from '../config/firebase'
 
 const items = [
 	{
@@ -33,6 +36,25 @@ const items = [
 export default function TripExpensesScreen(props) {
 	const {id, place, country} = props.route.params;
 	const navigation = useNavigation();
+	const isFocused = useIsFocused();
+	const[expenses, setExpenses] = useState([]);
+
+	const fetchExpenses = async ()=>{
+		const q = query(expensesRef, where("tripId", "==", id));
+		const querySnapshot = await getDocs(q);
+		let data = [];
+		querySnapshot.forEach(doc=>{
+			// console.log('documents: ',doc.data());
+			data.push({...doc.data(), id: doc.id});
+		})
+		setExpenses(data);
+	}
+
+	useEffect(()=>{
+		if (isFocused)
+		fetchExpenses();
+	}, [isFocused]);
+
   return (
 	<ScreenWrapper className="flex-1">
 		<View className="px-4">
@@ -51,13 +73,13 @@ export default function TripExpensesScreen(props) {
 			<View className="space-y-3">
 				<View className="flex-row justify-between items-center">
 					<Text className={`${colors.heading} font-bold text-xl`}>Expenses</Text>
-					<TouchableOpacity onPress={()=> navigation.navigate('AddExpense')} className="p-2 px-3 bg-white border border-gray-200 rounded-full">
+					<TouchableOpacity onPress={()=> navigation.navigate('AddExpense', {id, place, country})} className="p-2 px-3 bg-white border border-gray-200 rounded-full">
 						<Text className={colors.heading}>Add Expense</Text>
 				</TouchableOpacity>
 				</View>
 				<View style={{height: 430}}>
 					<FlatList
-						data={items}
+						data={expenses}
 						ListEmptyComponent={<EmptyList message={"You haven't recorded any expenses yet"} />}
 						keyExtractor={item=> item.id}
 						showsVerticalScrollIndicator={false}

@@ -11,7 +11,7 @@ export default function WelcomScreen() {
 	<ScreenWrapper>
 		<View className="h-full flex justify-around">
 			<View className="flex-justify justify-center items-center mt-10">
-				<Image source={require('../assets/images/welcome.gif')} className="h-96 w-96 shadow" />
+				<Image source={require('../assets/images/welcome.gif')} className="h-96 w-96" />
 			</View>
 			<View className="mx-5 mb-20">
 				<Text className={`${colors.heading} text-center font-bold text-4xl mb-10`}>Expensify</Text>

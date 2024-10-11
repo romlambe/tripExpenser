@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Touchable, TouchableOpacity } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import ScreenWrapper from '../components/screenWrapper'
 import { colors } from '../theme'
@@ -10,32 +10,37 @@ import { auth } from '../config/firebase'
 import { Loading } from '../components/loading'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUserLoading } from '../redux/slices/user'
-
+import Snackbar from '../components/snackBar'
 
 
 export default function SignInScreen() {
 	const [email,setEmail] = useState('');
 	const [password,setPassword] = useState('');
-	const {userLoading} =useSelector(state=>state.user);
+	const [snackbarVisible, setsnackbarVisible] = useState(false);
+	const [snackbarMessage, setsnackbarMessage] = useState('');
+	const {userLoading} = useSelector(state=>state.user);
+
 
 	const navigation = useNavigation();
-
 	const dispatch = useDispatch();
 
+
 	const handleSubmit = async () => {
+		setsnackbarVisible(false);
 		if (email && password){
-			// navigation.goBack();
-			// navigation.navigate('Home');
 			try{
 				dispatch(setUserLoading(true));
 				await signInWithEmailAndPassword(auth, email, password);
 				dispatch(setUserLoading(false));
 			}catch(e){
-				//snackbar aussi
+				dispatch(setUserLoading(false));
+				setsnackbarMessage(`${e.message}`);
+				setsnackbarVisible(true);
 			}
-
 		}else{
-			//pareil que sur signup rajouter une snackbar
+			setsnackbarMessage('Sign in failed. Email and Password are required');
+			setsnackbarVisible(true);
+			// dispatch(setUserLoading(false));
 		}
 	}
   return (
@@ -65,17 +70,20 @@ export default function SignInScreen() {
 
 			<View>
 				{
-					userLoading? (
-						<Loading />
-					):(
-						<TouchableOpacity onPress={handleSubmit} style={{backgroundColor: colors.button}} className="my-6 rounded-full p-3 shadow-sm mx-2">
-							<Text className="text-center text-white text-lg font-bold">Sign In</Text>
-						</TouchableOpacity>
-					)
+					<TouchableOpacity onPress={handleSubmit} style={{backgroundColor: colors.button}} className="my-6 rounded-full p-3 shadow-sm mx-2">
+						<Text className="text-center text-white text-lg font-bold">Sign In</Text>
+					</TouchableOpacity>
 				}
-
 			</View>
+			{snackbarVisible && (
+			<Snackbar
+            	message={snackbarMessage}
+            	onActionPress={() => setsnackbarVisible(false)}
+            	containerStyle={{ marginHorizontal: 12 }}
+          	/>
+        )}
 		</View>
 	</ScreenWrapper>
   )
 }
+

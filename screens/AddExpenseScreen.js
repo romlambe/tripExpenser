@@ -5,20 +5,38 @@ import { colors } from '../theme'
 import BackButton from '../components/backButton'
 import { Image } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
+import Snackbar from '../components/snackBar'
 import { categories } from '../constants'
+import { addDoc } from 'firebase/firestore'
+import { expensesRef } from '../config/firebase'
+import Loading from '../components/loading'
 
-export default function AddTripScreen() {
+export default function AddTripScreen(props) {
+	let {id} = props.route.params;
 	const [title,setTitle] = useState('');
 	const [amount,setAmount] = useState('');
 	const [category,setCategory] = useState('');
+	const [snackbarVisible, setsnackbarVisible] = useState(false);
+	const [snackbarMessage, setsnackbarMessage] = useState('');
+	const [loading, setLoading] = useState(false);
 
 	const navigation = useNavigation();
 
-	const handleAddExpense = () => {
+	const handleAddExpense = async () => {
 		if (title && amount && category){
-			navigation.goBack();
+			// navigation.goBack();
+			setLoading(true);
+			let doc = await addDoc(expensesRef, {
+				title,
+				amount,
+				category,
+				tripId: id,
+			})
+			setLoading(false);
+			if (doc && doc.id) navigation.goBack();
 		}else{
-
+			setsnackbarMessage('Please fill all fields');
+			setsnackbarVisible(true);
 		}
 	}
   return (
@@ -63,10 +81,22 @@ export default function AddTripScreen() {
 
 
 			<View>
-				<TouchableOpacity onPress={handleAddExpense} style={{backgroundColor: colors.button}} className="my-6 rounded-full p-3 shadow-sm mx-2">
-					<Text className="text-center text-white text-lg font-bold">Add Expense</Text>
-				</TouchableOpacity>
+			{
+					loading? (
+						<Loading/>
+					):(
+						<TouchableOpacity onPress={handleAddExpense} style={{backgroundColor: colors.button}} className="my-6 rounded-full p-3 shadow-sm mx-2">
+							<Text className="text-center text-white text-lg font-bold">Add Expense</Text>
+						</TouchableOpacity>)
+				}
 			</View>
+			{snackbarVisible && (
+			<Snackbar
+            	message={snackbarMessage}
+            	onActionPress={() => setsnackbarVisible(false)}
+            	containerStyle={{ marginHorizontal: 12 }}
+          	/>
+			)}
 		</View>
 	</ScreenWrapper>
   )

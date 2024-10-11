@@ -1,38 +1,62 @@
 import { View, Text, TouchableOpacity, Image, FlatList } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import ScreenWrapper from '../components/screenWrapper'
 import { colors } from '../theme'
 import randomImage from '../assets/images/randomImage'
 import EmptyList from '../components/emptyList'
-import { useNavigation } from '@react-navigation/native'
-import { auth } from '../config/firebase'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
+import { auth, tripsRef } from '../config/firebase'
 import { signOut } from 'firebase/auth'
+import { useSelector } from 'react-redux'
+// import { query } from 'firebase/database'
+import { getDocs, query, where } from 'firebase/firestore'
 
-const items= [
-	{
-		id: 1,
-		place: 'Gujrat',
-		country: 'Pakistan',
-	},
-	{
-		id: 2,
-		place: 'London Eye',
-		country: 'England',
-	},
-	{
-		id: 3,
-		place: 'Washington DC',
-		country: 'America',
-	},
-	{
-		id: 4,
-		place: 'New York',
-		country: 'America',
-	},
-]
+// const items= [
+// 	{
+// 		id: 1,
+// 		place: 'Gujrat',
+// 		country: 'Pakistan',
+// 	},
+// 	{
+// 		id: 2,
+// 		place: 'London Eye',
+// 		country: 'England',
+// 	},
+// 	{
+// 		id: 3,
+// 		place: 'Washington DC',
+// 		country: 'America',
+// 	},
+// 	{
+// 		id: 4,
+// 		place: 'New York',
+// 		country: 'America',
+// 	},
+// ]
 
 export default function HomeScreen() {
 	const navigation = useNavigation();
+
+	const{user} = useSelector(state=>state.user);
+	const[trips, setTrips] = useState([]);
+
+	const isFocused = useIsFocused();
+
+	const fetchTrips = async ()=>{
+		const q = query(tripsRef, where("userId", "==", user.uid));
+		const querySnapshot = await getDocs(q);
+		let data = [];
+		querySnapshot.forEach(doc=>{
+			// console.log('documents: ',doc.data());
+			data.push({...doc.data(), id: doc.id});
+		})
+		setTrips(data);
+	}
+
+	useEffect(()=>{
+		if (isFocused)
+		fetchTrips();
+	}, [isFocused]);
 
 	const handleLogout = async() => {
 		await signOut(auth);
@@ -58,7 +82,7 @@ export default function HomeScreen() {
 			</View>
 			<View style={{height: 500}}>
 				<FlatList
-					data={items}
+					data={trips}
 					numColumns={2}
 					ListEmptyComponent={<EmptyList message={"You haven't recorded any trips yet"}/>}
 					showsVerticalScrollIndicator={false}
